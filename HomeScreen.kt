@@ -1,0 +1,132 @@
+package com.rahmatullah.aisuperapp.feature.home
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.rahmatullah.aisuperapp.core.ai.AiEngine
+import com.rahmatullah.aisuperapp.core.ai.AiResponse
+import kotlinx.coroutines.launch
+
+@Composable
+fun HomeScreen() {
+    val coroutineScope = rememberCoroutineScope()
+    val aiEngine = remember { AiEngine("YOUR_API_KEY") }
+    
+    var promptText by remember { mutableStateOf("") }
+    var aiResponses by remember { mutableStateOf<List<AiResponse>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E))
+                )
+            )
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        // بخش هدر (Header)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Spacer(modifier = Modifier.height(30.dp))
+            Text(
+                text = "SmartFile AI",
+                color = Color.White,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "موتور هوش مصنوعی چندگانه ابری",
+                color = Color.Cyan,
+                fontSize = 14.sp
+            )
+        }
+
+        // بخش نمایش نتایج و پاسخ‌ها
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+                .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.Cyan)
+            } else if (aiResponses.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Text(text = "پاسخ مدل‌ها:", color = Color.Green, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    aiResponses.forEach { response ->
+                        Text(
+                            text = "${response.modelName}: ${response.content}",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+            } else {
+                Text(
+                    text = "دستور یا سوال خود را وارد کنید...",
+                    color = Color.Gray,
+                    fontSize = 16.sp
+                )
+            }
+        }
+
+        // بخش دکمه‌ها و تعامل
+        Column(modifier = Modifier.fillMaxWidth()) {
+            GlassmorphicButton(text = "اجرای پردازش همزمان AI") {
+                if (promptText.isNotBlank()) {
+                    isLoading = true
+                    coroutineScope.launch {
+                        aiResponses = aiEngine.getConsensusResponse(promptText)
+                        isLoading = false
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            GlassmorphicButton(text = "تولید ویدیو و استودیو رسانه‌ای") {
+                // قابلیت ویدیو
+            }
+        }
+    }
+}
+
+@Composable
+fun GlassmorphicButton(text: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Button(
+            onClick = onClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = text,
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
